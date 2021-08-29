@@ -1,0 +1,58 @@
+package main
+
+import (
+	"bufio"
+	"context"
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/Chronostasys/centralot/log"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+)
+
+type key string
+
+func main() {
+	var (
+		conn string
+	)
+	flag.StringVar(&conn, "s", "127.0.0.1:8001", "server address")
+	flag.Parse()
+	err := log.InitLogger(zap.NewProductionConfig(), conn)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	writer := bufio.NewWriter(os.Stdout)
+	id := uuid.New()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, key("id"), id)
+	_, err = writer.WriteString("using ctx id: " + id.String() + "\n")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		_, err := writer.WriteString("centralog>")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		err = writer.Flush()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		// Read the keyboad input.
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		log.Info(input).CtxID(ctx).Log()
+		log.Sync()
+	}
+}

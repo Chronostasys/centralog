@@ -1,6 +1,7 @@
 package logserver
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -26,7 +27,7 @@ type LogServerOptions struct {
 	MongoUrl           string
 	Database           string
 	Collection         string
-	ExtraIndexes       []mongo.IndexModel // ts and level is automatically indexed
+	ExtraIndexes       []mongo.IndexModel // ts, level and id is automatically indexed
 	ExpireAfterSeconds int32
 }
 
@@ -41,6 +42,7 @@ func (ls *logServer) Listen(address string) error {
 			fmt.Println(err)
 			continue
 		}
+		log.Printf("received connection from %s", conn.RemoteAddr().String())
 		go ls.handleConn(conn)
 	}
 }
@@ -67,6 +69,9 @@ func CreateLogListener(opt *LogServerOptions) (LogListener, error) {
 			{
 				Keys: bson.M{"level": 1},
 			},
+			{
+				Keys: bson.M{"id": 1},
+			},
 		}, opt.ExtraIndexes...),
 	)
 	if err != nil {
@@ -79,18 +84,20 @@ func CreateLogListener(opt *LogServerOptions) (LogListener, error) {
 }
 
 func (ls *logServer) handleConn(conn net.Conn) {
-	dec := json.NewDecoder(conn)
+	reader := bufio.NewReader(conn)
+	dec := json.NewDecoder(reader)
 	logs := make([]interface{}, 10)
 	i := 0
 	for {
 		i = 0
 		for {
 			var doc map[string]interface{}
-
 			err := dec.Decode(&doc)
+			size := reader.Buffered()
 			if err == io.EOF {
+				log.Printf("connection closed from %s", conn.RemoteAddr().String())
 				// all done
-				break
+				return
 			}
 			if err != nil {
 				log.Println(err)
@@ -102,6 +109,9 @@ func (ls *logServer) handleConn(conn net.Conn) {
 				logs = append(logs, doc)
 			}
 			i++
+			if size == 0 || i > 100 {
+				break
+			}
 		}
 		if i > 0 {
 			_, err := ls.col.InsertMany(context.Background(), logs[:i])
