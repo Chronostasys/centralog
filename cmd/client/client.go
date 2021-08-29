@@ -12,8 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type key string
-
 func main() {
 	var (
 		conn string
@@ -28,7 +26,7 @@ func main() {
 	writer := bufio.NewWriter(os.Stdout)
 	id := uuid.New()
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, key("id"), id)
+	ctx = context.WithValue(ctx, log.IDKey, id)
 	_, err = writer.WriteString("using ctx id: " + id.String() + "\n")
 	if err != nil {
 		fmt.Println(err)

@@ -6,6 +6,10 @@ import (
 	"go.uber.org/zap"
 )
 
+type Key string
+
+const IDKey Key = "id"
+
 type ChainLogger struct {
 	logFunc
 	msg    string
@@ -20,7 +24,7 @@ func (cl *ChainLogger) Any(key string, val interface{}) *ChainLogger {
 	return cl
 }
 func (cl *ChainLogger) CtxID(ctx context.Context) *ChainLogger {
-	return cl.Any("id", ctx.Value("id"))
+	return cl.Any("id", ctx.Value(IDKey))
 }
 
 type logFunc func(msg string, fields ...zap.Field)
