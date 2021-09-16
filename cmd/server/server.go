@@ -19,7 +19,7 @@ func main() {
 	flag.StringVar(&col, "col", "logcol", "collection to store logs")
 	flag.StringVar(&port, "p", "8001", "port to listen")
 	flag.StringVar(&conn, "c", "mongodb://localhost:27017", "mongodb connection string")
-	flag.IntVar(&exp, "e", 3600, "how long a log will store")
+	flag.IntVar(&exp, "e", 360000, "how long a log will store")
 	flag.Parse()
 	server, err := logserver.CreateLogListener(&logserver.LogServerOptions{
 		Database:           db,
