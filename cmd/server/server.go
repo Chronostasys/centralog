@@ -31,7 +31,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	server.Listen("0.0.0.0:" + port)
 	fmt.Println("server started listen on "+port)
-
+	server.Listen("0.0.0.0:" + port)
 }
