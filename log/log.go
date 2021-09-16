@@ -10,13 +10,19 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var defaultLogger *zap.Logger
+var (
+	defaultLogger *zap.Logger
+	addr          string
+)
 
 func InitLogger(conf zap.Config, serverAddr string) error {
+	connChan = make(chan net.Conn)
+	addr = serverAddr
 	client, err := net.Dial("tcp", serverAddr)
 	if err != nil {
 		return err
 	}
+	conn = client
 	conf.EncoderConfig.EncodeTime = func(t time.Time, pae zapcore.PrimitiveArrayEncoder) {
 		pae.AppendString(t.Format("2006-01-02T15:04:05Z07:00"))
 	}
