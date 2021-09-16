@@ -6,9 +6,8 @@ import (
 	"go.uber.org/zap"
 )
 
-type Key string
 
-const IDKey Key = "id"
+const IDKey string = "centralog_id"
 
 type ChainLogger struct {
 	logFunc

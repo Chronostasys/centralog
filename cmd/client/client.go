@@ -34,7 +34,7 @@ func main() {
 	}
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		_, err := writer.WriteString("centralog>")
+		_, err := writer.WriteString("centralog> ")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
