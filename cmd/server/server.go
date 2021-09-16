@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
 	"github.com/Chronostasys/centralog/logserver"
@@ -31,5 +32,6 @@ func main() {
 		log.Fatal(err)
 	}
 	server.Listen("0.0.0.0:" + port)
+	fmt.Println("server started listen on "+port)
 
 }
