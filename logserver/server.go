@@ -101,6 +101,7 @@ func (ls *logServer) handleConn(conn net.Conn) {
 			}
 			if err != nil {
 				log.Println(err)
+				continue
 			}
 			doc["ts"], _ = time.Parse("2006-01-02T15:04:05Z07:00", doc["ts"].(string))
 			if i < len(logs) {
