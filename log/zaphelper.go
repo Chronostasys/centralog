@@ -7,7 +7,7 @@ import (
 )
 
 
-const IDKey string = "id"
+const IDKey string = "centralog_id"
 
 type ChainLogger struct {
 	logFunc
