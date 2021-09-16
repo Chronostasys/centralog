@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Chronostasys/centralot/log"
+	"github.com/Chronostasys/centralog/log"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )

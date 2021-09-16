@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/Chronostasys/centralot/logserver"
+	"github.com/Chronostasys/centralog/logserver"
 )
 
 func main() {

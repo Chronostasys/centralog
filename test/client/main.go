@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/Chronostasys/centralot/log"
+	"github.com/Chronostasys/centralog/log"
 	"go.uber.org/zap"
 )
 

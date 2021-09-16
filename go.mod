@@ -1,4 +1,4 @@
-module github.com/Chronostasys/centralot
+module github.com/Chronostasys/centralog
 
 go 1.16
 
