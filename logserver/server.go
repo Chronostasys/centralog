@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -84,10 +85,12 @@ func CreateLogListener(opt *LogServerOptions) (LogListener, error) {
 }
 
 func (ls *logServer) handleConn(conn net.Conn) {
+	defer conn.Close()
 	reader := bufio.NewReader(conn)
 	dec := json.NewDecoder(reader)
 	logs := make([]interface{}, 10)
 	i := 0
+	errcount := 0
 	for {
 		i = 0
 		for {
@@ -101,6 +104,15 @@ func (ls *logServer) handleConn(conn net.Conn) {
 			}
 			if err != nil {
 				log.Println(err)
+				errcount++
+				if strings.Contains(err.Error(), "closed") {
+					// conn closed by remote, return
+					return
+				}
+				if errcount > 10 {
+					// something isn't right, reset connection
+					return
+				}
 				continue
 			}
 			doc["ts"], _ = time.Parse("2006-01-02T15:04:05Z07:00", doc["ts"].(string))

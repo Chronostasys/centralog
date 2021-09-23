@@ -33,6 +33,9 @@ func InitLogger(conf zap.Config, serverAddr string) error {
 	customPath := fmt.Sprintf("%s:whatever", "log-server")
 	conf.OutputPaths = []string{customPath}
 	defaultLogger, err = conf.Build()
+	// Log func in wrapped in centralog
+	// so add a default skip to make the caller right
+	defaultLogger = defaultLogger.WithOptions(zap.AddCallerSkip(1))
 	if err != nil {
 		return err
 	}
