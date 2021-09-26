@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"strings"
+	"sync"
 	"time"
 )
 
@@ -31,7 +31,9 @@ func getConn() net.Conn {
 }
 
 type serverWriter struct {
-	b *bytes.Buffer
+	b      *bytes.Buffer
+	reConn bool
+	m      *sync.Mutex
 }
 
 func (sw *serverWriter) Close() error {
@@ -42,26 +44,36 @@ func (sw *serverWriter) Sync() error {
 	if err != nil {
 		return err
 	}
-	_, err = getConn().Write(bs)
+	n, err := getConn().Write(bs)
+	fmt.Println(n)
 	if err != nil {
-		sw.b.Write(bs)
-		if strings.Contains(err.Error(), "An existing connection was forcibly closed by the remote host") {
-			fmt.Println("log server conn closed by remote, start trying reconnect")
-			go func() {
-
-				for {
-					err = reconnectConn()
-					if err != nil {
-						fmt.Println("reconnect failed, try again after 5 seconds")
-						time.Sleep(time.Second * 5)
-					} else {
-						fmt.Println("reconnected")
-						break
-					}
-
-				}
-			}()
+		fmt.Println("log server conn interupted, start trying reconnect", err)
+		sw.m.Lock()
+		if sw.reConn {
+			sw.m.Unlock()
+			sw.b.Write(bs)
+			return err
 		}
+		sw.reConn = true
+		sw.b.Write([]byte(
+			fmt.Sprintf(`{"level":"info","ts":"2021-09-26T15:10:19+08:00","caller":"log/log.go:35","msg":"%s"}`, dbcol),
+		))
+		sw.b.Write(bs)
+		sw.m.Unlock()
+		go func() {
+			for {
+				err = reconnectConn()
+				if err != nil {
+					fmt.Println("reconnect failed, try again after 5 seconds")
+					time.Sleep(time.Second * 5)
+				} else {
+					fmt.Println("reconnected")
+					sw.reConn = false
+					break
+				}
+
+			}
+		}()
 		return err
 	}
 	return nil
@@ -78,6 +90,8 @@ func (sw *serverWriter) Write(p []byte) (n int, err error) {
 func newServerWriter(conn net.Conn) *serverWriter {
 	buff := bytes.NewBuffer(make([]byte, 0, 500))
 	return &serverWriter{
-		b: buff,
+		b:      buff,
+		reConn: false,
+		m:      &sync.Mutex{},
 	}
 }

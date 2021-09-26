@@ -13,6 +13,7 @@ import (
 var (
 	defaultLogger *zap.Logger
 	addr          string
+	dbcol         string
 )
 
 type LogOptions struct {
@@ -26,11 +27,14 @@ func InitLoggerWithOpt(conf zap.Config, opts *LogOptions) error {
 	if err != nil {
 		return err
 	}
-	Info(opts.Db + ";" + opts.Collection).Log()
-	Sync()
+	dbcol = opts.Db + ";" + opts.Collection
+	selectDbAndCol()
 	return nil
 }
-
+func selectDbAndCol() {
+	Info(dbcol).Log()
+	Sync()
+}
 func InitLogger(conf zap.Config, serverAddr string) error {
 	connChan = make(chan net.Conn)
 	addr = serverAddr

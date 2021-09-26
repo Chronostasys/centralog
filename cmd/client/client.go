@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Chronostasys/centralog/log"
 	"github.com/google/uuid"
@@ -53,6 +54,10 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
+		}
+		input = strings.Trim(input, "\n\r ")
+		if len(input) == 0 {
+			continue
 		}
 		log.Info(input).CtxID(ctx).Log()
 		log.Sync()
