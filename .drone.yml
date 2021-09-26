@@ -5,3 +5,4 @@ data:
   docker_repo: registry.cn-hangzhou.aliyuncs.com/pivotstudio/centralog
   docker_registry: registry.cn-hangzhou.aliyuncs.com
   entry_file: cmd/server/server.go
+  default_branch: master
