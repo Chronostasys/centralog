@@ -1,5 +1,5 @@
 kind: template
-load: chronos-go-ac-pot.yaml
+load: log-go-ac-pot.yaml
 data:
   deploy_file: deploy/logserver.yaml
   docker_repo: registry.cn-hangzhou.aliyuncs.com/pivotstudio/centralog
