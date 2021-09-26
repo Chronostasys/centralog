@@ -18,7 +18,11 @@ func main() {
 	)
 	flag.StringVar(&conn, "s", "127.0.0.1:8001", "server address")
 	flag.Parse()
-	err := log.InitLogger(zap.NewProductionConfig(), conn)
+	err := log.InitLoggerWithOpt(zap.NewProductionConfig(), &log.LogOptions{
+		Server:     conn,
+		Db:         "logtest",
+		Collection: "logtest",
+	})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

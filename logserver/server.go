@@ -20,8 +20,8 @@ type LogListener interface {
 	Listen(address string) error
 }
 type logServer struct {
-	col  *mongo.Collection
-	opts *LogServerOptions
+	opts   *LogServerOptions
+	client *mongo.Client
 }
 
 type LogServerOptions struct {
@@ -48,8 +48,8 @@ func (ls *logServer) Listen(address string) error {
 	}
 }
 
-func CreateLogListener(opt *LogServerOptions) (LogListener, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(opt.MongoUrl))
+func CreateLogListener(opts *LogServerOptions) (LogListener, error) {
+	client, err := mongo.NewClient(options.Client().ApplyURI(opts.MongoUrl))
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +58,21 @@ func CreateLogListener(opt *LogServerOptions) (LogListener, error) {
 	if err != nil {
 		return nil, err
 	}
-	db := client.Database(opt.Database)
-	col := db.Collection(opt.Collection)
-	_, err = col.Indexes().CreateMany(
+	return &logServer{
+		opts:   opts,
+		client: client,
+	}, nil
+}
+
+func (ls *logServer) getIndexedCol(dbname, colname string) (*mongo.Collection, error) {
+	db := ls.client.Database(dbname)
+	col := db.Collection(colname)
+	_, err := col.Indexes().CreateMany(
 		context.Background(),
 		append([]mongo.IndexModel{
 			{
 				Keys:    bson.M{"ts": -1},
-				Options: &options.IndexOptions{ExpireAfterSeconds: &opt.ExpireAfterSeconds},
+				Options: &options.IndexOptions{ExpireAfterSeconds: &ls.opts.ExpireAfterSeconds},
 			},
 			{
 				Keys: bson.M{"level": 1},
@@ -73,15 +80,12 @@ func CreateLogListener(opt *LogServerOptions) (LogListener, error) {
 			{
 				Keys: bson.M{"id": 1},
 			},
-		}, opt.ExtraIndexes...),
+		}, ls.opts.ExtraIndexes...),
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &logServer{
-		col:  col,
-		opts: opt,
-	}, nil
+	return col, nil
 }
 
 func (ls *logServer) handleConn(conn net.Conn) {
@@ -91,6 +95,8 @@ func (ls *logServer) handleConn(conn net.Conn) {
 	logs := make([]interface{}, 10)
 	i := 0
 	errcount := 0
+	first := true
+	var col *mongo.Collection
 	for {
 		i = 0
 		for {
@@ -115,6 +121,27 @@ func (ls *logServer) handleConn(conn net.Conn) {
 				}
 				continue
 			}
+			if first {
+				msg := doc["msg"].(string)
+				sps := strings.Split(msg, ";")
+				var dbname, colname string
+				if len(sps) == 2 && len(sps[0]) > 0 && len(sps[1]) > 0 {
+					dbname, colname = sps[0], sps[1]
+				} else {
+					dbname, colname = ls.opts.Database, ls.opts.Collection
+				}
+				col, err = ls.getIndexedCol(dbname, colname)
+				if err != nil {
+					log.Println("create index failed", "dbname: "+dbname, "colname: "+colname, err)
+					return
+				}
+				first = false
+				log.Println("get indexed col success", conn.RemoteAddr(), "dbname: "+dbname, "colname: "+colname)
+				if len(sps) == 2 && len(sps[0]) > 0 && len(sps[1]) > 0 {
+					// skip proto log
+					continue
+				}
+			}
 			doc["ts"], _ = time.Parse("2006-01-02T15:04:05Z07:00", doc["ts"].(string))
 			if i < len(logs) {
 				logs[i] = doc
@@ -127,7 +154,7 @@ func (ls *logServer) handleConn(conn net.Conn) {
 			}
 		}
 		if i > 0 {
-			_, err := ls.col.InsertMany(context.Background(), logs[:i])
+			_, err := col.InsertMany(context.Background(), logs[:i])
 			if err != nil {
 				log.Println(err)
 			}

@@ -15,6 +15,22 @@ var (
 	addr          string
 )
 
+type LogOptions struct {
+	Server     string
+	Db         string // optional
+	Collection string // optional
+}
+
+func InitLoggerWithOpt(conf zap.Config, opts *LogOptions) error {
+	err := InitLogger(conf, opts.Server)
+	if err != nil {
+		return err
+	}
+	Info(opts.Db + ";" + opts.Collection).Log()
+	Sync()
+	return nil
+}
+
 func InitLogger(conf zap.Config, serverAddr string) error {
 	connChan = make(chan net.Conn)
 	addr = serverAddr
