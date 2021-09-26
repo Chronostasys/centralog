@@ -1,12 +1,5 @@
-#build stage
-FROM golang:alpine AS builder
-RUN apk add --no-cache git
-WORKDIR /go/src/app
-COPY . .
-RUN go build -o /go/bin/app -v cmd/server/server.go
-
-#final stage
 FROM alpine:latest
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 RUN apk --no-cache add ca-certificates
-COPY --from=builder /go/bin/app /app
+COPY app /app
 ENTRYPOINT /app
