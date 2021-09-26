@@ -6,3 +6,5 @@ data:
   docker_registry: registry.cn-hangzhou.aliyuncs.com
   entry_file: cmd/server/server.go
   default_branch: master
+  docker_user_name_secret: docker_user_name
+  docker_pass_secret: docker_pass
