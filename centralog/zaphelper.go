@@ -1,11 +1,10 @@
-package log
+package centralog
 
 import (
 	"context"
 
 	"go.uber.org/zap"
 )
-
 
 const IDKey string = "centralog_id"
 

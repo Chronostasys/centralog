@@ -1,4 +1,4 @@
-package log
+package centralog
 
 import (
 	"bytes"

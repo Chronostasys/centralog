@@ -7,13 +7,18 @@ a simple central log library buit on top of zap.
 
 ## Usage
 
-First, start a server:
+First, get it via:  
+```bash
+go get github.com/Chronostasys/centralog:v1.1.0
+```
+
+Then, start a server:
 > Note: this lib should only be used in trusted environments, do not expose your log server to internet
 ```go
 ls, err := logserver.CreateLogListener(&logserver.LogServerOptions{
     MongoUrl:           "mongodb://localhost:27018",
-    Database:           "testlog",
-    Collection:         "zaplog",
+    Database:           "testlog",  // default log db
+    Collection:         "zaplog",   // default log col
     ExpireAfterSeconds: 3600,
 })
 if err != nil {
@@ -26,7 +31,11 @@ if err != nil {
 ```
 Then, config the client:  
 ```go
-log.InitLogger(zap.NewProductionConfig(), "127.0.0.1:8001")
+log.InitLoggerWithOpt(zap.NewProductionConfig(), &log.LogOptions{
+    Server:     "127.0.0.1:8001",
+    Db:         "logtest",
+    Collection: "logtest",
+})
 ```
 After that, log anything you want!  
 ```go
