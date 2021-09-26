@@ -1,0 +1,7 @@
+kind: template
+load: go-ac-pot.yaml
+data:
+  deploy_file: deploy/logserver.yaml
+  docker_repo: registry.cn-hangzhou.aliyuncs.com/pivotstudio/centralog
+  docker_registry: registry.cn-hangzhou.aliyuncs.com
+  entry_file: cmd/server/server.go
