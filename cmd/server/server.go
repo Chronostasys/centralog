@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Chronostasys/centralog/logserver"
+	"github.com/Pivot-Studio/centralog/logserver"
 )
 
 func main() {
@@ -31,6 +31,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("server started listen on "+port)
+	fmt.Println("server started listen on " + port)
 	server.Listen("0.0.0.0:" + port)
 }

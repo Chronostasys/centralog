@@ -1,4 +1,4 @@
-module github.com/Chronostasys/centralog
+module github.com/Pivot-Studio/centralog
 
 go 1.16
 

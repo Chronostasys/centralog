@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Chronostasys/centralog/centralog"
+	"github.com/Pivot-Studio/centralog/centralog"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
