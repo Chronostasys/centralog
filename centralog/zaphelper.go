@@ -80,6 +80,9 @@ func CtxInfo(ctx CtxProvider, msg string) *ChainLogger {
 		logFunc: defaultLogger.Info,
 		msg:     msg,
 	}
+	ctx.Iterate(func(key string, value interface{}) {
+		c.fields = append(c.fields, zap.Any(key, value))
+	})
 	return c
 }
 
@@ -88,6 +91,9 @@ func CtxWarn(ctx CtxProvider, msg string) *ChainLogger {
 		logFunc: defaultLogger.Warn,
 		msg:     msg,
 	}
+	ctx.Iterate(func(key string, value interface{}) {
+		c.fields = append(c.fields, zap.Any(key, value))
+	})
 	return c
 }
 
@@ -96,5 +102,8 @@ func CtxError(ctx CtxProvider, msg string) *ChainLogger {
 		logFunc: defaultLogger.Error,
 		msg:     msg,
 	}
+	ctx.Iterate(func(key string, value interface{}) {
+		c.fields = append(c.fields, zap.Any(key, value))
+	})
 	return c
 }
