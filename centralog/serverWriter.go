@@ -16,7 +16,7 @@ var (
 
 func reconnectConn() error {
 	client, err := net.Dial("tcp", addr)
-	if err != nil {
+	if err != nil {                                         
 		return err
 	}
 	connChan <- client

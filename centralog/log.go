@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -20,6 +21,41 @@ type LogOptions struct {
 	Server     string
 	Db         string // optional
 	Collection string // optional
+}
+
+type logSink struct {
+	ws zapcore.WriteSyncer
+	f  *os.File
+	sw *serverWriter
+}
+
+func (l *logSink) Write(p []byte) (n int, e error) {
+	return l.ws.Write(p)
+}
+
+func (l *logSink) Sync() error {
+	return l.ws.Sync()
+}
+
+func (l *logSink) Close() error {
+	err := l.f.Close()
+	if err != nil {
+		return err
+	}
+	err = l.sw.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func newLogSink(client net.Conn, f *os.File) zap.Sink {
+	sw := newServerWriter(client)
+	return &logSink{
+		ws: zapcore.NewMultiWriteSyncer(f, sw), // !important:DO NOT change this order of params
+		f:  f,
+		sw: sw,
+	}
 }
 
 func InitLoggerWithOpt(conf zap.Config, opts *LogOptions) error {
@@ -47,7 +83,7 @@ func InitLogger(conf zap.Config, serverAddr string) error {
 		pae.AppendString(t.Format("2006-01-02T15:04:05Z07:00"))
 	}
 	zap.RegisterSink("log-server", func(u *url.URL) (zap.Sink, error) {
-		return newServerWriter(client), nil
+		return newLogSink(client, os.Stdout), nil
 	})
 	// build a valid custom path
 	customPath := fmt.Sprintf("%s:whatever", "log-server")

@@ -6,7 +6,16 @@ import (
 	"go.uber.org/zap"
 )
 
-const IDKey string = "centralog_id"
+const (
+	IDKey string = "centralog_id"
+)
+
+type CtxProvider interface {
+	context.Context
+	Set(key string, value interface{})
+	Get(key string) (value interface{}, exists bool)
+	Iterate(func(key string, value interface{}))
+}
 
 type ChainLogger struct {
 	logFunc
@@ -53,4 +62,39 @@ func Error(msg string) *ChainLogger {
 }
 func Sync() {
 	defaultLogger.Sync()
+}
+
+func CtxDebug(ctx CtxProvider, msg string) *ChainLogger {
+	c := &ChainLogger{
+		logFunc: defaultLogger.Debug,
+		msg:     msg,
+	}
+	ctx.Iterate(func(key string, value interface{}) {
+		c.fields = append(c.fields, zap.Any(key, value))
+	})
+	return c
+}
+
+func CtxInfo(ctx CtxProvider, msg string) *ChainLogger {
+	c := &ChainLogger{
+		logFunc: defaultLogger.Info,
+		msg:     msg,
+	}
+	return c
+}
+
+func CtxWarn(ctx CtxProvider, msg string) *ChainLogger {
+	c := &ChainLogger{
+		logFunc: defaultLogger.Warn,
+		msg:     msg,
+	}
+	return c
+}
+
+func CtxError(ctx CtxProvider, msg string) *ChainLogger {
+	c := &ChainLogger{
+		logFunc: defaultLogger.Error,
+		msg:     msg,
+	}
+	return c
 }
